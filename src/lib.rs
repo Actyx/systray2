@@ -4,7 +4,8 @@ pub mod api;
 use std::{
     collections::HashMap,
     error, fmt,
-    sync::mpsc::{channel, Receiver},
+    sync::mpsc::{channel, Receiver, RecvTimeoutError},
+    time::Duration,
 };
 
 type BoxedError = Box<dyn error::Error + Send + Sync + 'static>;
@@ -133,12 +134,17 @@ impl Application {
         self.window.quit()
     }
 
-    pub fn wait_for_message(&mut self) -> Result<(), Error> {
+    pub fn wait_for_message(&mut self, timeout: Option<Duration>) -> Result<(), Error> {
         loop {
             let msg;
-            match self.rx.recv() {
+            match self
+                .rx
+                .recv_timeout(timeout.unwrap_or_else(|| Duration::new(u64::MAX, 0)))
+            {
                 Ok(m) => msg = m,
-                Err(_) => {
+                // Yield and wait for the next poll
+                Err(RecvTimeoutError::Timeout) => break,
+                Err(RecvTimeoutError::Disconnected) => {
                     self.quit();
                     break;
                 }
