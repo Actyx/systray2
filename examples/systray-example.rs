@@ -33,7 +33,7 @@ fn main() -> Result<(), systray::Error> {
     })?;
 
     println!("Waiting on message!");
-    app.wait_for_message(None)?;
+    app.wait_for_message()?;
     Ok(())
 }
 
