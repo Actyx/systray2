@@ -93,7 +93,7 @@ impl GtkSystrayApp {
             self.menu.show_all();
             return;
         }
-        let m = gtk::MenuItem::new_with_label(item_name);
+        let m = gtk::MenuItem::with_label(item_name);
         self.menu.append(&m);
         m.connect_activate(move |_| {
             run_on_gtk_thread(move |stash: &GtkSystrayApp| {

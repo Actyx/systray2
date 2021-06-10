@@ -1,9 +1,9 @@
 #![windows_subsystem = "windows"]
 
 //#[cfg(target_os = "windows")]
-fn main() -> Result<(), systray::Error> {
+fn main() -> Result<(), systray2::Error> {
     let mut app;
-    match systray::Application::new() {
+    match systray2::Application::new() {
         Ok(w) => app = w,
         Err(_) => panic!("Can't create window!"),
     }
@@ -13,23 +13,23 @@ fn main() -> Result<(), systray::Error> {
 
     app.add_menu_item("Print a thing", |_| {
         println!("Printing a thing!");
-        Ok::<_, systray::Error>(())
+        Ok::<_, systray2::Error>(())
     })?;
 
     app.add_menu_item("Add Menu Item", |window| {
         window.add_menu_item("Interior item", |_| {
             println!("what");
-            Ok::<_, systray::Error>(())
+            Ok::<_, systray2::Error>(())
         })?;
         window.add_menu_separator()?;
-        Ok::<_, systray::Error>(())
+        Ok::<_, systray2::Error>(())
     })?;
 
     app.add_menu_separator()?;
 
     app.add_menu_item("Quit", |window| {
         window.quit();
-        Ok::<_, systray::Error>(())
+        Ok::<_, systray2::Error>(())
     })?;
 
     println!("Waiting on message!");
