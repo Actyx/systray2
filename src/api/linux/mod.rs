@@ -1,8 +1,6 @@
 use crate::{Error, SystrayEvent};
 use glib;
-use gtk::{
-    self, MenuShellExt, GtkMenuItemExt, WidgetExt
-};
+use gtk::prelude::{GtkMenuItemExt, MenuShellExt, WidgetExt};
 use libappindicator::{AppIndicator, AppIndicatorStatus};
 use std::{
     self,
@@ -31,7 +29,7 @@ pub struct MenuItemInfo {
     checked: bool,
 }
 
-type Callback = Box<(Fn(&GtkSystrayApp) -> () + 'static)>;
+type Callback = Box<dyn Fn(&GtkSystrayApp) + 'static>;
 
 // Convenience function to clean up thread local unwrapping
 fn run_on_gtk_thread<F>(f: F)
@@ -54,8 +52,8 @@ where
 
 impl GtkSystrayApp {
     pub fn new(event_tx: Sender<SystrayEvent>) -> Result<GtkSystrayApp, Error> {
-        if let Err(e) = gtk::init() {
-            return Err(Error::OsError(format!("{}", "Gtk init error!")));
+        if let Err(_e) = gtk::init() {
+            return Err(Error::OsError("Gtk init error!".to_string()));
         }
         let mut m = gtk::Menu::new();
         let mut ai = AppIndicator::new("", "");
@@ -65,7 +63,7 @@ impl GtkSystrayApp {
             menu: m,
             ai: RefCell::new(ai),
             menu_items: RefCell::new(HashMap::new()),
-            event_tx: event_tx,
+            event_tx,
         })
     }
 
@@ -77,7 +75,7 @@ impl GtkSystrayApp {
             .ok();
     }
 
-    pub fn add_menu_separator(&self, item_idx: u32) {
+    pub fn add_menu_separator(&self, _item_idx: u32) {
         //let mut menu_items = self.menu_items.borrow_mut();
         let m = gtk::SeparatorMenuItem::new();
         self.menu.append(&m);
@@ -125,7 +123,6 @@ impl Window {
                 }
                 Err(e) => {
                     tx.send(Err(e));
-                    return;
                 }
             });
             gtk::main();
@@ -139,7 +136,7 @@ impl Window {
     }
 
     pub fn add_menu_entry(&self, item_idx: u32, item_name: &str) -> Result<(), Error> {
-        let n = item_name.to_owned().clone();
+        let n = item_name.to_owned();
         run_on_gtk_thread(move |stash: &GtkSystrayApp| {
             stash.add_menu_entry(item_idx, &n);
         });
@@ -154,14 +151,14 @@ impl Window {
     }
 
     pub fn set_icon_from_file(&self, file: &str) -> Result<(), Error> {
-        let n = file.to_owned().clone();
+        let n = file.to_owned();
         run_on_gtk_thread(move |stash: &GtkSystrayApp| {
             stash.set_icon_from_file(&n);
         });
         Ok(())
     }
 
-    pub fn set_icon_from_resource(&self, resource: &str) -> Result<(), Error> {
+    pub fn set_icon_from_resource(&self, _resource: &str) -> Result<(), Error> {
         panic!("Not implemented on this platform!");
     }
 
@@ -169,7 +166,7 @@ impl Window {
         Ok(())
     }
 
-    pub fn set_tooltip(&self, tooltip: &str) -> Result<(), Error> {
+    pub fn set_tooltip(&self, _tooltip: &str) -> Result<(), Error> {
         panic!("Not implemented on this platform!");
     }
 

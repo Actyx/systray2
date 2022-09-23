@@ -89,9 +89,7 @@ impl Application {
         E: error::Error + Send + Sync + 'static,
     {
         let idx = self.menu_idx;
-        if let Err(e) = self.window.add_menu_entry(idx, item_name) {
-            return Err(e);
-        }
+        self.window.add_menu_entry(idx, item_name)?;
         self.callback.insert(idx, make_callback(f));
         self.menu_idx += 1;
         Ok(idx)
@@ -99,9 +97,7 @@ impl Application {
 
     pub fn add_menu_separator(&mut self) -> Result<u32, Error> {
         let idx = self.menu_idx;
-        if let Err(e) = self.window.add_menu_separator(idx) {
-            return Err(e);
-        }
+        self.window.add_menu_separator(idx)?;
         self.menu_idx += 1;
         Ok(idx)
     }
@@ -142,16 +138,15 @@ impl Application {
 
     pub fn try_wait(&mut self, timeout: Duration) -> Result<(), Error> {
         loop {
-            let msg;
-            match self.rx.recv_timeout(timeout) {
-                Ok(m) => msg = m,
+            let msg = match self.rx.recv_timeout(timeout) {
+                Ok(m) => m,
                 // Yield and wait for the next poll
                 Err(RecvTimeoutError::Timeout) => return Err(Error::TimeoutError),
                 Err(RecvTimeoutError::Disconnected) => {
                     self.quit();
                     break;
                 }
-            }
+            };
             if self.callback.contains_key(&msg.menu_index) {
                 if let Some(mut f) = self.callback.remove(&msg.menu_index) {
                     f(self)?;
